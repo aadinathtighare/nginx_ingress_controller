@@ -1,0 +1,82 @@
+Q. i m using eks so in that i m using nginx ingress controller so I need network load balancer why ?
+--> EKS + NGINX Ingress Controller वापरत असशील, तर हो — तुला Network Load Balancer (NLB) लागतो.
+🚀 Why NLB is Required for NGINX Ingress Controller on EKS?
+When you install NGINX ingress controller, ते cluster च्या बाहेरून traffic receive करायला पाहिजे.
+But pods ला directly public IP मिळत नाही.
+Kubernetes मध्ये एक external entry-point लागतो — LoadBalancer type Service.
+------------------------------------------
+🔥 NGINX Ingress Controller = Runs inside cluster
+तो फक्त एक pod/deployment आहे.
+तो बाहेरच्या internet ला दिसत नाही.
+म्हणूनच त्याला एक्सपोज करायला लागते:
+➤ Service Type: LoadBalancer
+EKS मध्ये जेव्हा तू LoadBalancer service बनवतोस
+तेंव्हा AWS आपोआप एक NLB (Network Load Balancer) तयार करते.
+---------------------------------------------------------------
+✔ NGINX needs NLB because:
+
+NLB supports TCP/UDP traffic
+(NGINX is TCP-based)
+
+NLB preserves source IP
+ज्याची NGINX ला गरज आहे.
+
+NLB is faster & more stable for L4 load balancing
+
+NLB works perfectly with NodePort bonding
+→ NGINX ingress internal nodeports वापरतो.
+---------------------------------------------------
+[Internet]
+     |
+     v
+[NLB - AWS External LB]
+     |
+     v
+[NGINX Ingress Controller Service (LoadBalancer)]
+     |
+     v
+[NGINX Pods]
+     |
+     v
+[Your Backend Services]
+----------------------------------------------------------------------------------------
+Q. give me nginx ingress controller yaml files where we defines service type ? NLB ?
+Q. so we not written here kind: ingress ?
+--> 🧠 Ingress Controller vs Ingress Resource → दोन्ही वेगवेगळे आहेत
+1️⃣ Ingress Controller (NGINX)
+हे एक pod/deployment आहे
+जे तुमच्या cluster मधील Ingress rules process करते
+त्याला internet वरून traffic मिळण्यासाठी आपण:
+Deployment बनवतो
+Service type = LoadBalancer (NLB) देतो
+👉 हा भाग controller setup आहे — इथे kind: Ingress नसतो.
+------------------------------------------------------------------------------------
+2️⃣ Ingress Resource (Your application routing rules)
+जेव्हा NGINX already running आहे, तेव्हा तुम्ही actual URL/path routing rules लिहिता.
+इथे तुम्ही kind: Ingress वापरता.
+-------------------------------------------------------------------------------------------
+⭐ Final Answer
+👉 No — NGINX ingress controller setup करताना तुम्ही kind: Ingress लिहित नाही.
+👉 kind: Ingress फक्त तुमच्या application routing साठी वापरला जातो — controller चालू झाल्यावर.
+----------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
